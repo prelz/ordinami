@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stampa Determine a Contrarre</title>
+  <link rel="stylesheet" href="/style/jquery.mobile.css">
+  <script src="/js/jquery-1.12.3.js"></script>
+  <script src="/js/jquery.mobile.js"></script>
+  <script src="/js/jspdf.min.js"></script>
+  <script src="/js/ordini-common.js"></script>
+  <script>
+
+  var pdfdoc;
+  var file_defnum;
+
+  $(function () {
+
+    if (printorder.length > 0) {
+    
+      $('#descobj').text(printorder[0].descobj);
+
+      for (var i in rups) {
+        if (rups[i].infnUUID == printorder[0].rupid) {
+          $('#rupname').text(rups[i].name);
+          break;
+        }
+      }
+
+      var ord_date = italian_date(new Date(printorder[0].orddate));
+      $('#orddate').text(ord_date);
+
+      var decamount = printable_amount(printorder[0].reqamount);
+      $('#decamount').text(decamount);
+
+      $('#cig').text(printorder[0].cig.toUpperCase());
+
+      $('#capid').text(printorder[0].capid);
+      var cexp = printorder[0].exp.split(':');
+      $('#expid').text(cexp[1].toUpperCase() + " (" + cexp[0] + ")");
+      $('#critid').text(printorder[0].critid.toUpperCase());
+      $('#modop').text(printorder[0].modop.toUpperCase());
+
+    }
+
+    pdfdoc = new jsPDF('p', 'pt', 'a4');
+  });  
+
+  var specialElementHandlers = {
+    '#editor': function(element, renderer) {
+      return true;
+    }
+  };
+
+  function get_pdf() {
+    pdfdoc.addHTML($('#printorder'), 30, 20, 
+                   { dim: {h: 400, w:540} }, function() {
+      var filename = "determina";
+      if (file_defnum.length > 0) filename += file_defnum;
+      pdfdoc.save(filename + '.pdf');
+    });
+  }
+
+  </script>
+</head>
+
+<body>
+
+<div data-role="page" data-title="Stampa Manifestazione di Interesse">
+
+  <p>
+  <input type="button"
+         onClick="get_pdf();"
+         value="Get PDF" /></p>
+  <div id="printorder" data-role="main" class="ui-content" style="font-size: 14pt; background-color:white;">
+    <img src="infn_header.png" alt="Logo INFN" width="100%"/> <br /> <br />
+    <div style="text-align: right">Milano, <span id="orddate"></span></div><br />
+    <div style="text-align: center">MANIFESTAZIONE DI INTERESSE<br />
+      (bozza - da finalizzare)<div><br />
+    <div style="text-align: left">
+      STRUTTURA: <b>MILANO</b><br />
+      CIG: <b><span id="cig"></span></b><br />
+      OGGETTO: <b><span id="descobj"></span></b><br />
+      RUP: <b><span id="rupname"></span></b><br />
+      IMPORTO A BASE DI GARA: <b>EURO <span id="decamount"></span> (esclusa IVA)</b><br />
+      CAPITOLO E ESPERIMENTO: <b><span id="capid"></span> ESPERIMENTO <span id="expid"></b><br />
+      CRITERIO DI AGGIUDICAZIONE: <b><span id="critid"></span></b><br />
+      MODALIT&Agrave; DI INDIVIDUAZIONE DEGLI OPERATORI ECONOMICI DA INVITARE: <b><span id="modop"></span></b>
+      </div></div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

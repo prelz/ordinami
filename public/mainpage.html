@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/style/jquery.mobile.css">
+  <link rel="stylesheet" href="/style/jquery-ui-custom-datepicker.css">
+  <link rel="stylesheet" href="/style/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="/style/responsive.dataTables.min.css">
+  <link rel="stylesheet" href="/style/jquery.modal.css">
+  <style>
+   .ui-select .ui-btn { text-align: left }
+  </style>
+  <title>Determine a Contrarre: Immissione e Approvazione</title>
+  <script src="/js/jquery-1.12.3.js"></script>
+  <script src="/js/jquery.mobile.js"></script>
+  <script src="/js/jquery-ui-custom-datepicker.js"></script>
+  <script src="/js/jquery.dataTables.js"></script>
+  <script src="/js/dataTables.responsive.js"></script>
+  <script src="/js/jquery.modal.js"></script>
+  <script src="/js/ordini-common.js"></script>
+  <script>
+
+  var debugOutput = false;
+
+  $(function () {
+    var today_date = new Date();
+    var today_print = printable_date(today_date);
+    $('#orddate').val(today_print);
+    //$('#orddate').datepicker(
+    //  { dateFormat: 'dd/mm/yy',
+    //    beforeShow: function(input) {
+    //      $('.ui-field-contain').css('pointer-events', 'none');
+    //    },
+    //    onClose: function(dateText, obj) {
+    //      $('.ui-field-contain').css('pointer-events', 'auto');
+    //    }
+    //  }
+    //);
+    $('#rupid').selectmenu();
+    $('#expid').selectmenu();
+    $('#capid').selectmenu();
+    $('#critid').selectmenu();
+    $('#modop').selectmenu();
+
+    $('.ordiniui').show();
+
+    var explist = [];
+    $('#expid').html('');
+
+    for (var csn in exps) {
+      var print_csn = csn.toUpperCase();
+      if (print_csn == "CSN7") print_csn = "CommCalc";
+
+      for (var exp in exps[csn]) {
+        explist.push({ text: exp + ' (' + print_csn + ')',
+                       value: csn+':'+exp });
+      }
+    }
+
+    explist.sort(function (a,b) {
+      if (a.text < b.text) return -1;
+      return 1;
+    });
+
+    for (var i in explist) {
+      $('#expid').append($('<option/>', explist[i]));
+    }
+    $('#expid').selectmenu("refresh");
+
+    if (user_profile !== undefined) {
+      user_profile.first_last = user_profile['urn:oid:2.5.4.42'] +
+          ' ' + user_profile['urn:oid:2.5.4.4'].toUpperCase();
+      user_profile.last_first = user_profile['urn:oid:2.5.4.4'].toUpperCase() +
+          ', ' + user_profile['urn:oid:2.5.4.42'];
+      var welcomeHtml = "<h3 style=\"color: blue; text-align:center\">Benvenuto, " +
+                        user_profile.first_last +
+                        "&nbsp;&nbsp;&nbsp;<font color=\"red\"><i>Non sei tu? - " +
+                        "<a href=\"/logout\" data-inline=\"true\" data-role=\"button\">Logout." +
+                        "</a></i></font></h3>\n" 
+      $('#reqname').val(user_profile.last_first);
+      $('#reqemail').val(user_profile.mail);
+      if (debugOutput && (dir.infnUUID == user_profile.infnUUID)) {
+          welcomeHtml += '<h3><font color="orange">Benvenuto/a, o Direttore/a</font></h3>\n';
+      }
+      for (var csn in exps) {
+        var print_csn = csn.toUpperCase();
+        if (print_csn == "CSN7") print_csn = "CommCalc";
+        for (var exp in exps[csn]) {
+          for (var i in exps[csn][exp]) {
+            if (debugOutput && 
+                (exps[csn][exp][i].infnUUID == user_profile.infnUUID)) {
+              welcomeHtml += '<h4>Responsabile locale di: ' + exp +
+                             ' (' + print_csn + ')' + '</h4>\n';
+
+            }
+          }
+        }
+      }
+
+      for (var i in admins) {
+        if (admins[i].infnUUID == user_profile.infnUUID) {
+          if (debugOutput) {
+            welcomeHtml += '<h3><font color="blue">Sei un amministratore.</font></h3>\n';
+          }
+          enable_admin_buttons = true;
+          break;
+        }
+      }
+      if (dir.infnUUID == user_profile.infnUUID) enable_admin_buttons = true;
+
+      $('#rupid').html('');
+      for (var i in rups) {
+        var options = {
+          value: rups[i].infnUUID,
+          text : rups[i].name
+        };
+        if (rups[i].infnUUID == user_profile.infnUUID) {
+          if (debugOutput) {
+            welcomeHtml += '<h3><font color="red">Sei pure un RUP: Fortunato!</font></h3>\n';
+          }
+          options.selected = 'selected';
+        }
+        $('#rupid').append($('<option/>', options));
+      }
+        
+      var ordTableHeader = '<thead><tr><th data-priority="1">Num</th>'
+      ordTableHeader += '<th data-priority="3">Data</th>\n';
+      ordTableHeader += '<th data-priority="1">Richiedente</th>\n';
+      ordTableHeader += '<th data-priority="1">Sigla</th>\n';
+      ordTableHeader += '<th data-priority="3">Capitolo</th>\n';
+      ordTableHeader += '<th data-priority="1">Importo</th>\n';
+      ordTableHeader += '<th data-priority="3">Descrizione</th>\n';
+      ordTableHeader += '<th data-priority="1">Azioni</th></tr></thead>';
+
+      $('#userident').html(welcomeHtml).trigger('create');
+
+      if (rup_approvals.length > 0) {
+        var rupHtml = '<hr><b>Come RUP:</b><br /><table data-role="table" data-mode="columntoggle" class="ui-responsive" id="rupsign">\n';
+        rupHtml += ordTableHeader + '<tbody>\n';
+  
+        var rdetnums = '';
+
+        for (var i in rup_approvals) {
+          rupHtml += start_ord_table_row(rup_approvals[i]);
+          rupHtml += '<td><form method="post" data-ajax="false" action="/approval">';
+          rupHtml += '<input type="hidden" name="rupid" value="' +
+                     user_profile.infnUUID + '" />';
+          rupHtml += '<input type="hidden" name="detnum" value="' +
+                     rup_approvals[i].detnum + '" />\n';
+          if (i>0) rdetnums += ',';
+          rdetnums += rup_approvals[i].detnum;
+          if (rup_approvals[i].rup_approved) {
+            rupHtml += '<a href="https://smartcig.anticorruzione.it/AVCP-SmartCig" target="_blank">CIG:</a>' +
+                       '<input type="text" size="10" name="cig" />' +
+                       '<input type="submit" name="action" value="Imposta" />';
+          } else {
+            rupHtml += '<input type="submit" name="action" value="Approva" />';
+            rupHtml += '<input type="submit" name="action" value="Nega" />';
+          }
+          rupHtml += '</form></td></tr>\n';
+        }
+        rupHtml += "</tbody></table>\n";
+
+        if (rup_approvals.length > 1) {
+          rupHtml += '<form method="post" data-ajax="false" action="/approval">';
+          rupHtml += '<input type="hidden" name="rupid" value="' +
+                       user_profile.infnUUID + '" />';
+          rupHtml += '<input type="hidden" name="detnum" value="' +
+                      rdetnums + '" />';
+          rupHtml += '<input type="submit" name="action" value="Approva Tutti" />';
+          rupHtml += '<input type="submit" name="action" value="Nega Tutti" />';
+          rupHtml += '</form>\n';
+        }
+  
+        $('#rupactions').html(rupHtml);
+      }
+
+      if (enable_admin_buttons && (adm_approvals.length > 0)) {
+        var admHtml = '<hr><b>Come Amministratore:</b><br /><table data-role="table" data-mode="columntoggle" class="ui-responsive" id="admsign">\n';
+        admHtml += ordTableHeader + '<tbody>\n';
+  
+        for (var i in adm_approvals) {
+          admHtml += start_ord_table_row(adm_approvals[i]);
+          admHtml += '<td><form method="post" data-ajax="false" action="/approval">';
+          admHtml += '<input type="hidden" name="admid" value="' +
+                     user_profile.infnUUID + '" />';
+          admHtml += '<input type="hidden" name="detnum" value="' +
+                     adm_approvals[i].detnum + '" />\n';
+          admHtml += '<input type="submit" name="action" value="Conferma" />';
+          admHtml += '</form></td></tr>\n';
+        }
+        admHtml += "</tbody></table>\n";
+        $('#admactions').html(admHtml);
+        $('#admsign').table();
+      }
+
+      var signHtml = '';
+
+      if (!user_cookieok) {
+        signHtml += "<div id=\"cookieok\">" +
+                    "Questo sito fa uso di cookie tecnici per la gestione " +
+                    "della sessione di lavoro. Se non sei d'accordo smetti " +
+                    "subito di lavorare. "+
+                    "<input type=\"button\" onClick="+
+                    "\"$.get('/cookieok');$('#cookieok').remove();\" " +
+                    "value=\"Ok, ho capito, non mostrare pi&ugrave.\" /></div>\n";
+      }
+      if (user_approvals.length > 0) {
+        signHtml += '<hr><b>Come responsabile dei fondi:</b><br /><table data-role="table" data-mode="columntoggle" class="ui-responsive" id="authsign">\n';
+        signHtml += ordTableHeader + '<tbody>\n';
+  
+        var udetnums='';
+
+        for (var i in user_approvals) {
+          signHtml += start_ord_table_row(user_approvals[i]);
+          signHtml += '<td><form method="post" data-ajax="false" action="/approval">';
+          signHtml += '<input type="hidden" name="userid" value="' +
+                     user_profile.infnUUID + '">';
+          signHtml += '<input type="hidden" name="detnum" value="' +
+                     user_approvals[i].detnum + '">\n';
+          if (i>0) udetnums += ',';
+          udetnums += user_approvals[i].detnum;
+          signHtml += '<input type="submit" name="action" value="Approva">';
+          signHtml += '<input type="submit" name="action" value="Nega">';
+          signHtml += '</form></td></tr>';
+        }
+  
+        signHtml += "</tbody></table>\n";
+
+        if (user_approvals.length > 1) {
+          signHtml += '<form method="post" data-ajax="false" action="/approval">';
+          signHtml += '<input type="hidden" name="userid" value="' +
+                       user_profile.infnUUID + '">';
+          signHtml += '<input type="hidden" name="detnum" value="' +
+                      udetnums + '">';
+          signHtml += '<input type="submit" name="action" value="Approva Tutti">';
+          signHtml += '<input type="submit" name="action" value="Nega Tutti">';
+          signHtml += '</form>\n';
+        }
+      }
+      $('#signactions').html(signHtml);
+    }
+    $('#rupid').selectmenu("refresh");
+    $('#rupsign').table();
+    $('#authsign').table();
+    init_order_list();
+
+    $('#alertDialog').popup();
+    if (alert_message) {
+      $('#alertDialogText').html('<h3 style="color: red">'+alert_message+'</h3>');
+      $('#alertDialog').popup("open");
+    }
+    $('#successDialog').popup();
+    if (success_message) {
+      $('#successDialogText').html('<h3 style="color: green">'+success_message+'</h3>');
+      $('#successDialog').popup("open");
+    }
+  });  
+  </script>
+</head>
+<body>
+
+<div data-role="page" data-title="Determine a Contrarre: Immissione e Approvazione">
+  <div id="identity" class="ui-content">
+    <div id="userident"></div>
+    <!-- <a href="/logout" data-inline="true" data-role="button">Logout.</a> -->
+  </div>
+
+  <div data-role="header">
+    <div style="font-size:1.3em;color:red;text-align:center">Operazioni in attesa</div>
+  </div>
+
+  <div id="actions" class="ui-content">
+    <div id="signactions"></div>
+    <div id="rupactions"></div>
+    <div id="admactions"></div>
+    <hr>
+    <fieldset class="ui-grid-a">
+      <div class="ui-block-a"><input type="button" class="ordiniui" onClick="get_order_list(false);"
+         value="Lista determine non completate" /></div>
+      <div class="ui-block-b"><input type="button" class="ordiniui" onClick="get_order_list(true);"
+         value="Tutte le determine" /></div>
+    </fieldset>
+  </div>
+
+  <div data-role="header">
+    <div style="font-size:1.2em;color:blue;text-align:center">Nuova richiesta determina:</div>
+  </div>
+
+  <div id="neworder" data-role="main" class="ui-content">
+    <form method="post" data-ajax="false"
+          action="/add_request" onsubmit="return validate_fields();">
+      <div class="ui-field-contain" id="reqnameback">
+        <label for="reqname">Nome Richiedente:</label>
+        <input type="text" name="reqname" id="reqname" />
+      </div>
+      <div class="ui-field-contain">
+        <label for="rupid">Nome RUP:</label>
+        <select name="rupid" class="ordiniui" id="rupid"></select>
+      </div>
+      <div class="ui-field-contain" id="descobjback">
+        <label for="descobj">Descrizione oggetto:</label>
+        <textarea name="descobj" id="descobj"></textarea>
+      </div>
+      <div class="ui-field-contain" id="reqamountback">
+        <label for="reqamount">Importo presunto (IVA esclusa):</label>
+        <input type="text" name="reqamount" id="reqamount" />       
+      </div>
+      <div class="ui-field-contain" id="expidback">
+        <label for="expid">Sigla esperimento:</label>
+        <select name="expid" class="ordiniui" id="expid"></select>
+      </div>
+      <div class="ui-field-contain" id="capidback">
+        <label for="capid">Capitolo di spesa:</label>
+        <select name="capid" class="ordiniui" id="capid">
+          <option value="">Seleziona</option>
+          <option value="U1020199999">U1020199999 - Imposte, tasse e proventi assimilati a carico dell'ente n.a.c.</option>
+          <option value="U1030101002">U1030101002 - Pubblicazioni</option>
+          <option value="U1030102001">U1030102001 - Carta, cancelleria e stampati</option>
+          <option value="U1030102005">U1030102005 - Accessori per uffici e alloggi</option>
+          <option value="U1030102007">U1030102007 - Altri materiali tecnico-specialistici non sanitari</option>
+          <option value="U1030102008">U1030102008 - Strumenti tecnico-specialistici non sanitari</option>
+          <option value="U1030102999">U1030102999 - Altri beni e materiali di consumo n.a.c.</option>
+          <option value="U1030202001">U1030202001 - Rimborso per viaggio e trasloco</option>
+          <option value="U1030204002">U1030204002 - Acquisto servizi per formazione generica</option>
+          <option value="U1030207002">U1030207002 - Noleggi di mezzi di trasporto</option>
+          <option value="U1030207006">U1030207006 - Licenze d'uso per software</option>
+          <option value="U1030209005">U1030209005 - Manutenzione ordinaria e riparazioni di attrezzature</option>
+          <option value="U1030209011">U1030209011 - Manutenzione ordinaria e riparazioni di altri beni materiali</option>
+          <option value="U1030213003">U1030213003 - Trasporti, traslochi e facchinaggio</option>
+          <option value="U1030213999">U1030213999 - Altri servizi ausiliari n.a.c.</option>
+          <option value="U1030217001">U1030217001 - Commissioni per servizi finanziari</option>
+          <option value="U1030219001">U1030219001 - Gestione e manutenzione applicazioni</option>
+          <option value="U1030299999">U1030299999 - Altri servizi diversi n.a.c.</option>
+          <option value="U2020104002">U2020104002 - Costruzione apparati</option>
+          <option value="U2020105001">U2020105001 - Attrezzature scientifiche</option>
+          <option value="U2020199001">U2020199001 - Materiale bibliografico</option>
+        </select>
+      </div>
+      <div class="ui-field-contain">
+        <label for="critid">Criterio di aggiudicazione:</label>
+        <select name="critid" class="ordiniui" id="critid">
+
+          <option>Prezzo pi&ugrave; basso per forniture/servizi standard</option>
+          <option>Prezzo pi&ugrave; basso per forniture/servizi a condizioni di mercato</option>
+          <option>Prezzo pi&ugrave; basso per forniture/servizi ad elevata ripetitivit&agrave;</option>
+          <option>Offerta economicamente pi&ugrave; vantaggiosa</option>
+          <option>Affidamento diretto o fornitore unico</option>
+          <option>Adesione convenzione Consip</option>
+        </select>
+      </div>
+      <div class="ui-field-contain">
+        <label for="modop">Individuazione operatori economici:</label>
+        <select name="modop" class="ordiniui" id="modop">
+          <option>Richiesta di offerta (RdO) MEPA</option>
+          <option>Ordine diretto di acquisto (ODA) MEPA - da motivare</option>
+          <option>Ordine diretto di acquisto (ODA) fuori MEPA - da motivare</option>
+          <option>Avviso a manifestare interesse</option>
+          <option>Fornitore unico &gt 40000 euro</option>
+          <option>Adesione convenzione Consip</option>
+        </select>
+      </div>
+      <div class="ui-field-contain" id="docurlback">
+        <label for="docurl">URL a documentazione aggiuntiva:</label>
+        <input type="text" name="docurl" id="docurl" />
+      </div>
+      <div class="ui-field-contain">
+        <label for="orddate">Data richiesta:</label>
+        <input type="text" name="orddate" id="orddate" readonly/>
+      </div>
+      <div class="ui-field-contain">
+        <label for="email">E-mail:</label>
+        <input type="email" name="reqemail" id="reqemail" placeholder="Your email.." />
+      </div>
+      <input type="submit" class="ordiniui" value="Invia" id="invia">
+    </form>
+  </div>
+
+  <div data-role="popup" id="alertDialog" data-overlay-theme="b" data-theme="b" data-dismissible="false" style="max-width:400px;">
+    <div data-role="header" data-theme="a">
+    <h1>Errore!</h1>
+    </div>
+    <div role="main" class="ui-content">
+        <div id="alertDialogText"></div>
+        <input type="button"
+         class="ui-btn ui-corner-all ui-shadow ui-btn-inline"
+         data-inline="true"
+         onClick="$('#alertDialog').popup('close');"
+         value="OK" />
+    </div>
+  </div>
+
+  <div data-role="popup" id="successDialog" data-overlay-theme="b" data-theme="a" data-dismissible="false" style="max-width:400px;">
+    <div data-role="header" data-theme="a">
+    <h1>Tutto OK!</h1>
+    </div>
+    <div role="main" class="ui-content">
+        <div id="successDialogText"></div>
+        <input type="button"
+         class="ui-btn ui-corner-all ui-shadow ui-btn-inline"
+         data-inline="true"
+         onClick="$('#successDialog').popup('close');"
+         value="OK" />
+    </div>
+  </div>
+
+  <!--- <div data-role="popup" data-theme="a" data-overlay-theme="b"
+         class="ui-content" id="listOrders"> --->
+  <div id="listOrders" class="modal" style="display:none"> 
+  </div>
+
+</div>
+
+</body>
+</html>

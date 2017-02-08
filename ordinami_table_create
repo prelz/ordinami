@@ -1,0 +1,60 @@
+CREATE TABLE determine (
+         detnum INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+         defnum INT,
+         reqname VARCHAR(120),
+         reqid VARCHAR(40),
+         rupid VARCHAR(40),
+         admid VARCHAR(40),
+         cig VARCHAR(20),
+         descobj VARCHAR(800),
+         reqamount DOUBLE,
+         exp VARCHAR(40),
+         capid VARCHAR(40),
+         critid VARCHAR(100),
+         reqemail VARCHAR(100),
+         modop VARCHAR(100),
+         docurl VARCHAR(160),
+         notes VARCHAR(160),
+         orddate DATE,
+         adm_pending BOOLEAN DEFAULT FALSE,
+         rup_pending BOOLEAN DEFAULT TRUE,
+         rup_approved BOOLEAN DEFAULT FALSE,
+         rup_finished BOOLEAN DEFAULT FALSE,
+         created DATETIME,
+         lastupdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+ALTER TABLE determine AUTO_INCREMENT=100;
+CREATE INDEX idx_determine_reqsurname ON determine(reqsurname);
+CREATE INDEX idx_determine_reqid ON determine(reqid);
+CREATE INDEX idx_determine_rupid ON determine(rupid);
+
+CREATE TABLE users (
+         uuid VARCHAR(40) PRIMARY KEY,
+         surname VARCHAR(40),
+         givennames VARCHAR(80),
+         email VARCHAR(100),
+         cookieok BOOLEAN DEFAULT FALSE,
+         lastupdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_email ON users(email);
+
+CREATE TABLE approvals (
+         detnum INT NOT NULL,
+         apprid VARCHAR(40),
+         appremail VARCHAR(100),
+         isdir BOOLEAN DEFAULT FALSE,
+         status ENUM('pending', 'approved', 'denied', 'cancelled'),
+         apcreated DATETIME,
+         aplastupdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_approvals_detnum ON approvals(detnum);
+
+CREATE TABLE admmod (
+         detnum INT NOT NULL,
+         admid VARCHAR(40),
+         created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_admmod_detnum ON admmod(detnum);

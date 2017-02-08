@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Determine a Contrarre: Modifica</title>
+  <link rel="stylesheet" href="/style/jquery.mobile.css">
+  <link rel="stylesheet" href="/style/jquery-ui-custom-datepicker.css">
+  <style>
+   .ui-select .ui-btn { text-align: left }
+  </style>
+  <script src="/js/jquery-1.12.3.js"></script>
+  <script src="/js/jquery.mobile.js"></script>
+  <script src="/js/jquery-ui-custom-datepicker.js"></script>
+  <script src="/js/ordini-common.js"></script>
+  <script>
+
+  $(function () {
+
+    var dropdowns = [ 'rupid', 'expid', 'capid', 'critid', 'modop' ];
+
+    for (var i in dropdowns) {
+      $('#'+dropdowns[i]).selectmenu();
+    }
+
+    $('#detnum_print').text(modorder.detnum);
+    $('#detnum').val(modorder.detnum);
+
+    $('#rupid').html('');
+    for (var i in rups) {
+      var options = {
+        value: rups[i].infnUUID,
+        text : rups[i].name
+      };
+      if (rups[i].infnUUID == modorder.rupid) {
+        options.selected = 'selected';
+      }
+      $('#rupid').append($('<option/>', options));
+    }
+    $('#rupid').selectmenu("refresh");
+
+    var explist = [];
+    $('#expid').html('');
+
+    for (var csn in exps) {
+      var print_csn = csn.toUpperCase();
+      if (print_csn == "CSN7") print_csn = "CommCalc";
+
+      for (var exp in exps[csn]) {
+        explist.push({ text: exp + ' (' + print_csn + ')',
+                       value: csn+':'+exp });
+      }
+    }
+
+    explist.sort(function (a,b) {
+      if (a.text < b.text) return -1;
+      return 1;
+    });
+
+    for (var i in explist) {
+      if (explist[i].value == modorder.exp) explist[i].selected = 'selected';
+      $('#expid').append($('<option/>', explist[i]));
+    }
+    $('#expid').selectmenu("refresh");
+
+    $('#capid').val(modorder.capid);
+    $('#capid').selectmenu("refresh");
+    $('#critid').val(modorder.critid);
+    $('#critid').selectmenu("refresh");
+
+    var set_fields = [ 'cig', 'reqname', 'reqamount', 'descobj', 'reqemail' ];
+    for (var i in set_fields) {
+      $('#'+set_fields[i]).val(modorder[set_fields[i]]);
+    }
+
+    $('#modop').val(modorder.modop);
+    $('#modop').selectmenu("refresh");
+    $('#docurl').val(modorder.docurl);
+
+    var ord_date = printable_date(new Date(modorder.orddate));
+    $('#orddate').val(ord_date);
+    $('#orddate').datepicker(
+      { dateFormat: 'dd/mm/yy',
+        beforeShow: function(input) {
+          $('.ui-field-contain').css('pointer-events', 'none');
+        },
+        onClose: function(dateText, obj) {
+          $('.ui-field-contain').css('pointer-events', 'auto');
+        }
+      }
+    );
+
+    if (modorder.rup_approved) {
+      $('#rup_approved').prop('checked', true);
+      $('#rup_approved').checkboxradio('refresh');
+    }
+
+  });  
+
+  </script>
+</head>
+
+<body>
+
+<div data-role="page" data-title="Determine a Contrarre: Modifica">
+  <div data-role="header">
+    <h1>Modifica determina n. <span id="detnum_print">???</span></h1>
+  </div>
+
+  <div id="modorder" data-role="main" class="ui-content">
+    <form method="post" data-ajax="false" 
+          onsubmit="return validate_fields();" action="/change_request">
+      <input type="hidden" name="detnum" id="detnum" />
+      <div class="ui-field-contain" id="reqnameback">
+        <label for="reqname">Nome Richiedente:</label>
+        <input type="text" name="reqname" id="reqname" />
+      </div>
+      <div class="ui-field-contain">
+        <label for="rupid">Nome RUP:</label>
+        <select name="rupid" id="rupid"
+          onChange="$('#rup_approved').prop('checked',false).checkboxradio('refresh');">
+        </select>
+      </div>
+      <div class="ui-field-contain" id="cigback">
+        <label for="cig">CIG:</label>
+        <input type="text" name="cig" id="cig" />       
+      </div>
+      <div class="ui-field-contain" id="descobjback">
+        <label for="descobj">Descrizione oggetto:</label>
+        <textarea name="descobj" id="descobj"></textarea>
+      </div>
+      <div class="ui-field-contain" id="reqamountback">
+        <label for="reqamount">Importo presunto (IVA esclusa):</label>
+        <input type="text" name="reqamount" id="reqamount" />       
+      </div>
+      <div class="ui-field-contain" id="expidback">
+        <label for="expid">Sigla esperimento:</label>
+        <select name="expid" id="expid"></select>
+      </div>
+      <div class="ui-field-contain" id="capidback">
+        <label for="capid">Capitolo di spesa:</label>
+        <select name="capid" id="capid">
+          <option value="">Seleziona</option>
+          <option value="U1020199999">U1020199999 - Imposte, tasse e proventi assimilati a carico dell'ente n.a.c.</option>
+          <option value="U1030101002">U1030101002 - Pubblicazioni</option>
+          <option value="U1030102001">U1030102001 - Carta, cancelleria e stampati</option>
+          <option value="U1030102005">U1030102005 - Accessori per uffici e alloggi</option>
+          <option value="U1030102007">U1030102007 - Altri materiali tecnico-specialistici non sanitari</option>
+          <option value="U1030102008">U1030102008 - Strumenti tecnico-specialistici non sanitari</option>
+          <option value="U1030102999">U1030102999 - Altri beni e materiali di consumo n.a.c.</option>
+          <option value="U1030202001">U1030202001 - Rimborso per viaggio e trasloco</option>
+          <option value="U1030207002">U1030207002 - Noleggi di mezzi di trasporto</option>
+          <option value="U1030207006">U1030207006 - Licenze d'uso per software</option>
+          <option value="U1030209005">U1030209005 - Manutenzione ordinaria e riparazioni di attrezzature</option>
+          <option value="U1030209011">U1030209011 - Manutenzione ordinaria e riparazioni di altri beni materiali</option>
+          <option value="U1030213003">U1030213003 - Trasporti, traslochi e facchinaggio</option>
+          <option value="U1030213999">U1030213999 - Altri servizi ausiliari n.a.c.</option>
+          <option value="U1030217001">U1030217001 - Commissioni per servizi finanziari</option>
+          <option value="U1030219001">U1030219001 - Gestione e manutenzione applicazioni</option>
+          <option value="U1030299999">U1030299999 - Altri servizi diversi n.a.c.</option>
+          <option value="U2020104002">U2020104002 - Costruzione apparati</option>
+          <option value="U2020105001">U2020105001 - Attrezzature scientifiche</option>
+          <option value="U2020199001">U2020199001 - Materiale bibliografico</option>
+        </select>
+      </div>
+      <div class="ui-field-contain">
+        <label for="critid">Criterio di aggiudicazione:</label>
+        <select name="critid" id="critid">
+          <option>Prezzo pi&ugrave; basso per forniture/servizi standard</option>
+          <option>Prezzo pi&ugrave; basso per forniture/servizi a condizioni di mercato</option>
+          <option>Prezzo pi&ugrave; basso per forniture/servizi ad elevata ripetitivit&agrave;</option>
+          <option>Offerta economicamente pi&ugrave; vantaggiosa</option>
+          <option>Adesione convenzione Consip</option>
+          <option>Affidamento diretto o fornitore unico</option>
+        </select>
+      </div>
+      <div class="ui-field-contain">
+        <label for="modop">Individuazione operatori economici:</label>
+        <select name="modop" id="modop">
+          <option>Richiesta di offerta (RdO) MEPA</option>
+          <option>Ordine diretto di acquisto (ODA) MEPA - da motivare</option>
+          <option>Ordine diretto di acquisto (ODA) fuori MEPA - da motivare</option>
+          <option>Avviso a manifestare interesse</option>
+          <option>Fornitore unico &gt 40000</option>
+          <option>Adesione convenzione Consip</option>
+        </select>
+      </div>
+      <div class="ui-field-contain" id="docurlback">
+        <label for="docurl">URL a documentazione aggiuntiva:</label>
+        <input type="text" name="docurl" id="docurl" />
+      </div>
+      <div class="ui-field-contain">
+        <label for="orddate">Data richiesta:</label>
+        <input type="text" name="orddate" id="orddate" />
+      </div>
+      <div class="ui-field-contain">
+        <label for="email">E-mail:</label>
+        <input type="email" name="reqemail" id="reqemail" placeholder="Your email.." \>
+      </div>
+      <div class="ui-field-contain">
+        <label for="rup_approved">&larr; Accettato dal RUP</label>
+        <input name="rup_approved" type="checkbox" value="1" id="rup_approved"/>
+      </div>
+      <input type="submit" value="Modifica determina" id="invia">
+    </form>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,166 @@
+#!/usr/bin/node
+const ldap = require('ldapjs');
+const readlineSync = require('readline-sync');
+const assert = require('assert');
+const fs = require('fs');
+
+// Configuration starts here
+var sectid = 'infn:mi';
+var ldap_url = 'ldap://ds.infn.it';
+var extra_groups = [
+  { exp: 'csn5:design',
+    match_field: 'sn',
+    match_val: 'castoldi'
+  },
+  { exp: 'csn5:xfel',
+    match_field: 'sn',
+    match_val: 'michelato'
+  },
+  { exp: 'csn5:essmiur',
+    match_field: 'sn',
+    match_val: 'michelato'
+  },
+  { exp: 'csn5:eurofel',
+    match_field: 'sn',
+    match_val: 'serafini'
+  }
+];
+// Configuration ends here.
+
+var authtree = {}; // The result.
+authtree.exps = {};
+authtree.admins = [];
+authtree.rups = [];
+
+var client = ldap.createClient({
+  url: ldap_url,
+});
+
+// client.log.level('trace');
+
+var pass = readlineSync.question('LDAP password please:', {
+  hideEchoBack: true 
+});
+
+var tlsOpts = {
+  rejectUnauthorized: false // Certificate altnames don't include ds.infn.it.
+                            // as of July 6th, 2016.
+};
+
+client.starttls(tlsOpts, undefined, function(err, res) {
+  assert.ifError(err);
+
+  client.bind('infnUUID=CHANGEMECHANGEMECHANGEME,ou=People,dc=infn,dc=it', pass, function(err) {
+    assert.ifError(err);
+    var searchOpts = {
+      filter: '(&(ou=Sezione di Milano))',
+      scope: 'sub'
+    };
+
+    client.search('ou=people,dc=infn,dc=it', searchOpts, function(err, res) {
+      assert.ifError(err);
+
+      res.on('searchEntry', function(entry) {
+        var pobj = {
+          name: entry.object.sn.toUpperCase() + ', ' + entry.object.givenName,
+          email: entry.object.mail,
+          uid: entry.object.uid,
+          principal: entry.object.infnKerberosPrincipal,
+          infnUUID: entry.object.infnUUID
+        };
+
+        if (entry.object['schacPersonalUniqueCode'] !== undefined) {
+          var staff=entry.object['schacPersonalUniqueCode'].indexOf('matricola');
+          if (staff > 0) {
+            var matr = entry.object['schacPersonalUniqueCode'].indexOf(':', staff);
+            if (matr > 0) {
+              pobj.idno = parseInt(entry.object['schacPersonalUniqueCode'].substring(matr+1));
+              for (var i in entry.object['schacUserStatus']) {
+                var sus = entry.object['schacUserStatus'][i];
+                if (sus.indexOf('godiva-role:dipendente:attivo+ttl=nolimit') >= 0) {
+                  authtree.rups.push(pobj);
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        var admin_count = 0;
+        for (var i in entry.object['isMemberOf']) {
+           var mbr = entry.object['isMemberOf'][i];
+           if (mbr.indexOf('i:' + sectid) == 0) {
+             if (mbr.indexOf("resp:locale") == (mbr.length - 11)) {
+               var fields = mbr.split(':');
+               // Format: i:infn:mi:csn7:calcolo::resp:locale
+               if (authtree.exps[fields[3]] === undefined) {
+                 authtree.exps[fields[3]] = {};
+               }
+               if (authtree.exps[fields[3]][fields[4]] === undefined) {
+                 authtree.exps[fields[3]][fields[4]] = [];
+               }
+               authtree.exps[fields[3]][fields[4]].push(pobj);
+             } else if (mbr.indexOf("coordinatore") == (mbr.length - 12)) {
+               var fields = mbr.split(':');
+               // Format: i:infn:mi:csn4::n:coordinatore
+               if (authtree.exps[fields[3]] === undefined) {
+                 authtree.exps[fields[3]] = {};
+               }
+               if (authtree.exps[fields[3]][fields[4]] === undefined) {
+                 authtree.exps[fields[3]]['DOTAZIONI'] = [];
+               } 
+               authtree.exps[fields[3]]['DOTAZIONI'].push(pobj);
+             } else if (mbr.indexOf(sectid + ":servizio_amministrazione") > 0) {
+               admin_count++
+             } else if (mbr.indexOf("d:amministrativo") > 0) {
+               admin_count++
+             } else if (mbr.indexOf(sectid + ":direttore") > 0) {
+               authtree.dir = pobj;
+               authtree.exps['DIREZIONE'] = { 'ATTR_SERV_BASE': [ pobj ] };
+             } 
+             if (admin_count == 2)
+              {
+               authtree.admins.push(pobj);
+               admin_count++;
+              }
+             for (var i=0; i<extra_groups.length; i++) {
+               if (mbr.indexOf(sectid + ':' + extra_groups[i].exp) >= 0) {
+                 if ((mbr.indexOf('aff') > 0) &&
+                     (entry.object[extra_groups[i].match_field].toLowerCase().indexOf(extra_groups[i].match_val) >= 0)) {
+                   var fields = mbr.split(':');
+                   // Format: i:infn:mi:csn5:eurofel::aff:ric
+                   if (authtree.exps[fields[3]] === undefined) {
+                     authtree.exps[fields[3]] = {};
+                   }
+                   if (authtree.exps[fields[3]][fields[4]] === undefined) {
+                     authtree.exps[fields[3]][fields[4]] = [];
+                   }
+                   authtree.exps[fields[3]][fields[4]].push(pobj);
+                 }
+               }
+             }
+           }
+        }
+      });
+
+      res.on('error', function(err) {
+        console.error('error: ' + err.message);
+      });
+
+      res.on('end', function(result) {
+        client.unbind(function(err) {
+          assert.ifError(err);
+        });
+        authtree.rups.sort(function(r1, r2) { 
+          if (r1.name < r2.name) return -1;
+          return 1;
+        });
+        //console.log("module.exports = {\n  authtree:");
+        console.log(JSON.stringify(authtree, null, ' '));
+        //console.log("};");
+      });
+    });
+
+  });
+
+});
