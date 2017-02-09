@@ -5,25 +5,9 @@ const assert = require('assert');
 const fs = require('fs');
 
 // Configuration starts here
-var sectid = 'infn:mi';
+var sectid = 'infn:CHANGEME_SEZIONE_SHORT';
 var ldap_url = 'ldap://ds.infn.it';
 var extra_groups = [
-  { exp: 'csn5:design',
-    match_field: 'sn',
-    match_val: 'castoldi'
-  },
-  { exp: 'csn5:xfel',
-    match_field: 'sn',
-    match_val: 'michelato'
-  },
-  { exp: 'csn5:essmiur',
-    match_field: 'sn',
-    match_val: 'michelato'
-  },
-  { exp: 'csn5:eurofel',
-    match_field: 'sn',
-    match_val: 'serafini'
-  }
 ];
 // Configuration ends here.
 
@@ -50,10 +34,10 @@ var tlsOpts = {
 client.starttls(tlsOpts, undefined, function(err, res) {
   assert.ifError(err);
 
-  client.bind('infnUUID=CHANGEMECHANGEMECHANGEME,ou=People,dc=infn,dc=it', pass, function(err) {
+  client.bind('infnUUID=CHANGEME_UUID,ou=People,dc=infn,dc=it', pass, function(err) {
     assert.ifError(err);
     var searchOpts = {
-      filter: '(&(ou=Sezione di Milano))',
+      filter: '(&(ou=Sezione di CHANGEME_SEZIONE))',
       scope: 'sub'
     };
 

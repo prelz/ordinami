@@ -1,14 +1,14 @@
 module.exports = {
   production: {
     app: {
-      name: 'Gestione preliminare ordini sezione di Milano',
+      name: 'Gestione preliminare ordini sezione di CHANGEME_SEZIONE',
       port: process.env.PORT || 80,
       sslPort: process.env.SSLPORT || 443,
-      host: 'ordini.mi.infn.it',
+      host: 'CHANGEME_HOST',
       authtree: 'config/sigle_rup_admin.json',
-      smtpServer: 'mbox.mi.infn.it',
+      smtpServer: 'CHANGEME_OUTGOINGMAILSERVER',
       timezone: 'Europe/Rome',
-      adminEmail: 'ordini@mi.infn.it',
+      adminEmail: 'CHANGEME_ADMINMAIL',
       authorizeOnChanges: false,
       privateKey: 'config/server_private_key.pem',
       certificate: 'config/server_certificate.pem',
@@ -17,8 +17,8 @@ module.exports = {
     passport: {
       strategy: 'saml',
       saml: {
-        issuer: 'ordini_mi_infn_it_passport_saml',
-        host: 'ordini.mi.infn.it',
+        issuer: 'CHANGEME_PASSPORT',
+        host: 'CHANGEME_HOST',
         protocol: 'https://',
         path: '/login/callback',
 	identifierFormat: 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent',
