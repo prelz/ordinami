@@ -50,7 +50,7 @@ chmod u+x server.js
 
 ### - Per richiedere l'abilitazione del servizio al collegamento ad AAI:
  * verificare a questa pagina che risponda con un XML con i dati corretti:  
- http://CHANGEME_DBHOST/get_sp_metadata
+ http://CHANGEME_HOST/get_sp_metadata
 
 * andare alla pagina:  
 https://idp.infn.it/utils/metadata-send.php
@@ -58,7 +58,7 @@ https://idp.infn.it/utils/metadata-send.php
 e inserire i dati richiesti:
  - IdP => "produzione"
  - "Set di attributi" => "esteso"
- - "Metadata URL" => http://CHANGEME_DBHOST/get_sp_metadata
+ - "Metadata URL" => http://CHANGEME_HOST/get_sp_metadata
 
 ### Schema di flusso del programma
 
