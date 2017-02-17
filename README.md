@@ -5,7 +5,7 @@
 **generate_people_tree:**
 
  CHANGEME_SEZIONE_SHORT=mi  
- CHANGEME_UUID= (mettere il proprio infnUUID prendendolo da godiva)  
+ CHANGEME_UUID= (mettere il proprio infnLinkedUUID prendendolo da godiva)  
  CHANGEME_SEZIONE=Milano  
 
 **config/database.js:**
