@@ -41,7 +41,7 @@ shell> mysqladmin -p create CHANGEME_DBNAME
 shell>mysql -p CHANGEME_DBNAME  
 mysql>grant all on CHANGEME_DBNAME.* to 'CHANGEME_DBUSER'@CHANGEME_HOST identified by 'CHANGEME_DBPW';  
 mysql>\q  
-shell> mysql -p CHANGEME_DBNAME < ordini_table_create 
+shell> mysql -p CHANGEME_DBNAME < ordinami_table_create 
 
 - per lanciare il programma:
  
