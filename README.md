@@ -45,7 +45,6 @@ shell> mysql -p CHANGEME_DBNAME < ordinami_table_create
 
 - per lanciare il programma:
  
-chmod u+x server.js  
 ./server.js  
 
 ### - Per richiedere l'abilitazione del servizio al collegamento ad AAI:
