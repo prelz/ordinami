@@ -35,7 +35,7 @@
   
   server_private_key.pem e server_certificate.pem 
  
-- eseguire ./generate_people_tree (chiedera' la propria pw di AAI)
+- eseguire ./generate_people_tree > config/sigle_rup_admin.json (chiedera' la propria pw di AAI)
 
 shell> mysqladmin -p create CHANGEME_DBNAME  
 shell>mysql -p CHANGEME_DBNAME  
