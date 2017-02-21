@@ -15,6 +15,7 @@ CREATE TABLE determine (
          modop VARCHAR(100),
          docurl VARCHAR(160),
          notes VARCHAR(160),
+         comment VARCHAR(800),
          orddate DATE,
          adm_pending BOOLEAN DEFAULT FALSE,
          rup_pending BOOLEAN DEFAULT TRUE,

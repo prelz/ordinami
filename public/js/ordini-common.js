@@ -89,7 +89,7 @@
     ret += '<td>' + ord.exp + '</td>\n';
     ret += '<td>' + ord.capid + '</td>';
     ret += '<td>' + printable_amount(ord.reqamount) + '</td>';
-    ret += '<td>' + ord.descobj + '</td>\n';
+    ret += '<td>' + ord.descobj + '</td>';
     return ret;
   }
 
@@ -146,6 +146,7 @@
       "admid":   "Controllo amministrativo",
       "rupid":   "Resp. Unico Procedimento",
       "descobj": "Oggetto dell'acquisto",
+      "comment": "Commenti all'acquisto",
       "reqamount": "Importo dell'acquisto",
       "cig":     "CIG",
       "exp":     "Sigla Esperimento",
@@ -338,6 +339,7 @@
         tableRow.push(orders[i].capid);
         tableRow.push(printable_amount(orders[i].reqamount));
         tableRow.push(orders[i].descobj);
+        tableRow.push(orders[i].comment);
         tableRow.push(orders[i].modop);
         tableRow.push(orders[i].critid);
         tableRow.push(adm_name(orders[i].admid));
@@ -495,6 +497,12 @@
       $('#descobjback').css('background-color', '#ffaaaa');
       ret = false;
     }
+    $('#coomentback').css('background-color', '#aaffaa');
+    if ($('#comment').val().length <= 0) {
+      $('#commentback').css('background-color', '#ffaaaa');
+      ret = false;
+    }
+
     $('#docurlback').css('background-color', '#aaffaa');
     if ($('#docurl').val().length > 0) {
       var isUrl = /(ftp|http|https|root):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
