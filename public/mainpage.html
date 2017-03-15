@@ -100,7 +100,7 @@
       for (var i in admins) {
         if (admins[i].infnUUID == user_profile.infnUUID) {
           if (debugOutput) {
-            welcomeHtml += '<h3><font color="blue">Sei un amministratore.</font></h3>\n';
+            welcomeHtml += '<h3><font color="blue">Sei un amministrativo.</font></h3>\n';
           }
           enable_admin_buttons = true;
           break;
@@ -176,7 +176,7 @@
       }
 
       if (enable_admin_buttons && (adm_approvals.length > 0)) {
-        var admHtml = '<hr><b>Come Amministratore:</b><br /><table data-role="table" data-mode="columntoggle" class="ui-responsive" id="admsign">\n';
+        var admHtml = '<hr><b>Come Amministrazione:</b><br /><table data-role="table" data-mode="columntoggle" class="ui-responsive" id="admsign">\n';
         admHtml += ordTableHeader + '<tbody>\n';
   
         for (var i in adm_approvals) {
@@ -387,6 +387,10 @@
       <div class="ui-field-contain">
         <label for="email">E-mail:</label>
         <input type="email" name="reqemail" id="reqemail" placeholder="Your email.." />
+      </div>
+      <div class="ui-field-contain" id="commentback">
+        <label for="comment">Commenti:</label>
+        <textarea name="comment" id="comment" />
       </div>
       <input type="submit" class="ordiniui" value="Invia" id="invia">
     </form>
