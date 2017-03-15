@@ -1,7 +1,7 @@
 module.exports = {
   production: {
     app: {
-      name: 'Gestione preliminare ordini sezione di CHANGEME_SEZIONE',
+      sezione: 'CHANGEME_SEZIONE',
       port: process.env.PORT || 80,
       sslPort: process.env.SSLPORT || 443,
       host: 'CHANGEME_HOST',

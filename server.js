@@ -841,15 +841,15 @@ app.post('/approval', function (req, res) {
       } else if (isadmin) {
         if (approved) {
           var today_date = new Date();
-          connection.query("SELECT MAX(defnum) AS defnum from determine;",
+          connection.query("select if (@val:=(select defnum from determine where detnum="+req.body.detnum +"), @val, (SELECT MAX(defnum) from determine)+1) as defnum;",
                          function(err,drow) {
             if (err) {
               req.session.alertMessage = "Database error: " + err.code;
             }
             var nextnum = drow[0].defnum; 
-            if (!nextnum) {
-              nextnum = 1;
-            } else nextnum++;
+            //if (!nextnum) {
+            //  nextnum = 1;
+            //} else nextnum++;
 
             connection.query("UPDATE determine SET defnum=" + nextnum + "," +
                          " admid='" + apprid + "', adm_pending=FALSE," +
@@ -1154,11 +1154,11 @@ function approvalEmail(detnum, appremails, deter, op, dest) {
                      op.substr(1) + " richiesta determina #" + detnum +
                      " su fondi " + deter.exp;
   var emailText = "Richiedo al " + dest + " la " + op +
-                  " della richiesta di ordine INFN-Milano n. " + detnum + "\r\n";
+                  " della richiesta di ordine INFN-" + config.app.sezione  + " n. " + detnum + "\r\n";
   emailText += "Importo: EUR " + deter.reqamount +
                " Sigla: " + deter.exp + " Capitolo:" + deter.capid + "\r\n";
   emailText += "Oggetto: " + deter.descobj + "\r\n\r\n";
-  emailText += "Per la " + op + " visitare il sito http://devel.mi.infn.it.\r\n\r\n";
+  emailText += "Per la " + op + " visitare il sito http://" + config.app.host  +".\r\n\r\n";
   emailText += "Grazie.\r\n" + deter.reqname + "\r\n";
   //emailText += "DEBUG: Orig dest: " + appremails.join(',') + "\r\n";
   //appremails = [ "francesco.prelz@mi.infn.it" ] // DEBUG!
@@ -1169,7 +1169,7 @@ function rejectionEmail(detnum, dest, emailccs, deter, rejct) {
   if (!(config.app.smtpServer)) return;
   var emailSubject = "RIFIUTO richiesta determina #" + detnum +
                      " su fondi " + deter.exp;
-  var emailText = "La richiesta di ordine INFN-Milano n. " + detnum + "\r\n";
+  var emailText = "La richiesta di ordine INFN-" + config.app.sezione  + " n. " + detnum + "\r\n";
   emailText += "Importo: EUR " + deter.reqamount +
                " Sigla: " + deter.exp + " Capitolo:" + deter.capid + "\r\n";
   emailText += "Oggetto: " + deter.descobj + "\r\n\r\n";
@@ -1183,10 +1183,10 @@ function multiApprovalEmail(detnums, appremails, op) {
   var emailSubject = op.substr(0,1).toUpperCase() + 
                      op.substr(1) + " varie richieste determine";
   var emailText = "E' stata richiesta la " + op + " delle seguenti " +
-                  "richieste di determine INFN-Milano: " + detnums + "\r\n\r\n";
-  emailText += "Per la " + op + " visitare il sito http://devel.mi.infn.it.\r\n\r\n";
+                  "richieste di determine INFN-" + config.app.sezione  + ": " + detnums + "\r\n\r\n";
+  emailText += "Per la " + op + " visitare il sito http://" + config.app.host  +".\r\n\r\n";
   emailText += "Grazie.\r\n";
   //emailText += "DEBUG: Orig dest: " + appremails.join(',') + "\r\n";
   //appremails = [ "francesco.prelz@mi.infn.it" ] // DEBUG!
-  sendEmail("noreply@devel.mi.infn.it", appremails, emailSubject, emailText);
+  sendEmail("noreply@" + config.app.host, appremails, emailSubject, emailText);
 }

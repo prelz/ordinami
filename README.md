@@ -23,10 +23,6 @@
  CHANGEME_ADMINMAIL=ordini@mi.infn.it  
  CHANGEME_PASSPORT=ordini_mi_infn_it_passport_saml
 
-**server.js:**
-
- CHANGEME_HOST=ordini.mi.infn.it  
- CHANGEME_SEZIONE=Milano
 
 ### Installazione
 
@@ -45,6 +41,7 @@ shell> mysql -p CHANGEME_DBNAME < ordinami_table_create
 
 - per lanciare il programma:
  
+chmod u+x server.js  
 ./server.js  
 
 ### - Per richiedere l'abilitazione del servizio al collegamento ad AAI:

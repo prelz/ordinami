@@ -24,7 +24,6 @@ CREATE TABLE determine (
          created DATETIME,
          lastupdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-ALTER TABLE determine AUTO_INCREMENT=100;
 CREATE INDEX idx_determine_reqsurname ON determine(reqname);
 CREATE INDEX idx_determine_reqid ON determine(reqid);
 CREATE INDEX idx_determine_rupid ON determine(rupid);

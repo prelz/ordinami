@@ -67,7 +67,7 @@
     $('#critid').val(modorder.critid);
     $('#critid').selectmenu("refresh");
 
-    var set_fields = [ 'cig', 'reqname', 'reqamount', 'descobj', 'reqemail' ];
+    var set_fields = [ 'cig', 'reqname', 'reqamount', 'descobj', 'reqemail','comment','docurl' ];
     for (var i in set_fields) {
       $('#'+set_fields[i]).val(modorder[set_fields[i]]);
     }
@@ -144,6 +144,7 @@
           <option value="U1030101002">U1030101002 - Pubblicazioni</option>
           <option value="U1030102001">U1030102001 - Carta, cancelleria e stampati</option>
           <option value="U1030102005">U1030102005 - Accessori per uffici e alloggi</option>
+          <option value="U1030102006">U1030102006 - Materiale informatico</option>
           <option value="U1030102007">U1030102007 - Altri materiali tecnico-specialistici non sanitari</option>
           <option value="U1030102008">U1030102008 - Strumenti tecnico-specialistici non sanitari</option>
           <option value="U1030102999">U1030102999 - Altri beni e materiali di consumo n.a.c.</option>
@@ -197,6 +198,10 @@
       <div class="ui-field-contain">
         <label for="email">E-mail:</label>
         <input type="email" name="reqemail" id="reqemail" placeholder="Your email.." \>
+      </div>
+      <div class="ui-field-contain" id="commentback">
+        <label for="comment">Commenti (massimo 800 caratteri):</label>
+        <textarea maxlength="800" name="comment" id="comment"></textarea>
       </div>
       <div class="ui-field-contain">
         <label for="rup_approved">&larr; Accettato dal RUP</label>

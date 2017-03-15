@@ -410,11 +410,12 @@
       listHtml += '<th data-priority="1">Sigla</th>\n';
       listHtml += '<th data-priority="6">Capitolo</th>\n';
       listHtml += '<th data-priority="1">Importo</th>\n';
-      listHtml += '<th data-priority="3">Descrizione</th>\n';
+      listHtml += '<th data-priority="6">Descrizione</th>\n';
+      listHtml += '<th data-priority="6">Commenti</th>\n';
       listHtml += '<th data-priority="6">Indiv. Operatori</th>\n';
       listHtml += '<th data-priority="6">Crit. Aggiudicazione</th>\n';
       listHtml += '<th data-priority="6">Conferma Amminist.</th>\n';
-      listHtml += '<th data-priority="3">URL doc</th>\n';
+      listHtml += '<th data-priority="6">URL doc</th>\n';
       listHtml += '<th data-priority="2">Autorizzazioni mancanti</th>\n';
       listHtml += '<th data-priority="3">Autorizzazioni ottenute</th>\n';
       listHtml += '<th data-priority="6">Ultimo aggiornamento</th>\n';
@@ -497,7 +498,7 @@
       $('#descobjback').css('background-color', '#ffaaaa');
       ret = false;
     }
-    $('#coomentback').css('background-color', '#aaffaa');
+    $('#commentback').css('background-color', '#aaffaa');
     if ($('#comment').val().length <= 0) {
       $('#commentback').css('background-color', '#ffaaaa');
       ret = false;
