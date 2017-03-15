@@ -28,6 +28,13 @@ CREATE INDEX idx_determine_reqsurname ON determine(reqname);
 CREATE INDEX idx_determine_reqid ON determine(reqid);
 CREATE INDEX idx_determine_rupid ON determine(rupid);
 
+CREATE TABLE sessions (
+  session_id varchar(255) collate utf8_bin NOT NULL,
+  expires int(11) unsigned NOT NULL,
+  data text collate utf8_bin,
+  PRIMARY KEY  (session_id)
+);
+
 CREATE TABLE users (
          uuid VARCHAR(40) PRIMARY KEY,
          surname VARCHAR(40),
